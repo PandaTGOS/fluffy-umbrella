@@ -1,0 +1,1 @@
+Recursive character splitting is a chunking method that uses a list of characters (like newlines or spaces) to split text into smaller pieces while maintaining semantic coherence. It is highly effective for RAG because it keeps related sentences together, reducing context loss during retrieval.

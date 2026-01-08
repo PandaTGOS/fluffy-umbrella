@@ -1,0 +1,48 @@
+Meeting Date: October 24, 2025
+Attendees: Alice (PM), Bob (Eng Lead), Charlie (Architect), Dave (Dev)
+Subject: Project Alpha - Architecture Review and Roadmap
+
+Action Items:
+1. Bob to finalize the API specification by Friday.
+2. Charlie to prototype the new RAG ingestion pipeline.
+3. Dave to set up the CI/CD pipeline for the new repository.
+4. Alice to valid the user stories with the design team.
+
+Transcript / Detailed Notes:
+
+Alice: Let's get started. The goal of today's meeting is to solidify the architecture for Project Alpha.
+Bob: thanks Alice. We've reviewed the requirements. The key challenge is handling the large volume of unstructured data.
+Charlie: I agree. That's why I'm proposing we use a dedicated ingestion layer.
+We discussed this offline, but I want to formalize it.
+The ingestion layer needs to support PDF, Markdown, and Text files.
+It should be able to scan directories recursively.
+Dave: How are we handling updates? If a file changes, do we re-index everything?
+Charlie: Good point. For MVP, we can do full re-indexing.
+Later, we can implement a delta-check using file hashes.
+Bob: I like that approach. Keep it simple for now.
+Alice: What about the timeline? Can we get a demo by next week?
+Dave: If we stick to just text and markdown, yes. PDF might take longer due to library dependencies.
+Bob: Let's stick to Text and Markdown for the demo.
+Alice: Agreed. So the scope for the demo is a functioning RAG pipeline with those two formats.
+Charlie: I'll also ensure we have proper chunking strategies.
+We noticed that fixed-size chunking cuts off context sometimes.
+We might want to look into semantic chunking later.
+Bob: Noted. Let's add that to the tech debt backlog.
+Dave: I'll also start setting up the testing environment.
+We need to make sure we can run these tests in CI without a GPU.
+Bob: Yes, we can use mocks for the embedding model in CI.
+Alice: Moving on to the frontend. Are we building a custom UI or using Streamlit?
+Bob: Streamlit is faster for the internal tool. Let's go with that.
+Alice: Okay. So to recap:
+- Project Alpha is a go.
+- We are building a Directory Ingestion Layer.
+- MVP supports Text/Markdown.
+- Demo is due next week.
+- Architecture will focus on modularity (as per our principles).
+Charlie: One last thing. regarding the vector store.
+Are we using Chroma or staying in-memory?
+Bob: In-memory is fine for the demo. But let's build the interface so we can swap it out.
+Dave: I've already defined the VectorStore abstract base class, so we should be good.
+Alice: Perfect. Great meeting everyone.
+Let's crush this.
+Meeting Adjourned.
