@@ -1,0 +1,22 @@
+from typing import List
+from ....interfaces import Document, FileLoader
+
+class MarkdownLoader(FileLoader):
+    def can_load(self, path: str) -> bool:
+        return path.endswith(".md") or path.endswith(".markdown")
+
+    def load(self, path: str) -> List[Document]:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            
+            return [
+                Document(
+                    id=path,
+                    content=content,
+                    metadata={"source": path, "type": "markdown"}
+                )
+            ]
+        except Exception as e:
+            print(f"Error loading {path}: {e}")
+            return []
