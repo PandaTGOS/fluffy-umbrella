@@ -1,0 +1,29 @@
+apps:
+  - id: "general_chat"
+    name: "General Assistant"
+    description: "A simple chat bot using Qwen"
+    system_prompt: "You are a helpful AI assistant."
+    llm:
+      provider: "ollama"
+      model: "qwen:1.8b"
+      temperature: 0.7
+
+  - id: "research_assistant"
+    name: "Research Assistant"
+    description: "RAG-enabled assistant for querying documents"
+    system_prompt: "You are a research assistant. Use the retrieved context to answer questions."
+    llm:
+      provider: "ollama"
+      model: "qwen:1.8b"
+    rag:
+      enabled: true
+      k: 3
+
+  - id: "poet"
+    name: "Creative Poet"
+    description: "A creative writer"
+    system_prompt: "You are a creative poet. Respond only in rhymes."
+    llm:
+      provider: "ollama"
+      model: "qwen:1.8b"
+      temperature: 0.9
