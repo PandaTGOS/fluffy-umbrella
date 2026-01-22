@@ -247,3 +247,108 @@ Example:
 ```
 
 
+
+---
+
+
+---
+
+## Feature: Unified Enterprise Prompt Builder (Chat & RAG)
+To provide a generalizable and scalable way to handle prompts across all application types, we implemented a unified `PromptBuilder`. This allows you to define custom templates in `apps.yaml` for both Chat and RAG apps, properly injecting context and system prompts.
+
+### 1. Create PromptBuilder Service
+Create `llm_backend/core/services/prompt_builder.py`. This service handles message construction and template formatting with support for dynamic arguments (like `{context_str}`).
+
+```python
+from typing import List, Optional
+from llama_index.core.llms import ChatMessage, MessageRole
+
+class PromptBuilder:
+    def __init__(self, system_prompt: str, prompt_template: Optional[str] = None):
+        self.system_prompt = system_prompt
+        self.prompt_template = prompt_template if prompt_template else "{query}"
+
+    def build_messages(self, query: str, **kwargs) -> List[ChatMessage]:
+        """
+        Constructs messages. Accepts **kwargs to replace placeholders (e.g. {context_str}).
+        """
+        # 1. Format the user content 
+        user_content = self.prompt_template.replace("{query}", query).replace("{query_str}", query)
+        
+        # 2. Replace extra args (like context)
+        for key, value in kwargs.items():
+            user_content = user_content.replace(f"{{{key}}}", str(value))
+
+        return [
+            ChatMessage(role=MessageRole.SYSTEM, content=self.system_prompt),
+            ChatMessage(role=MessageRole.USER, content=user_content)
+        ]
+```
+
+### 2. Update Config Schema
+Modify `llm_backend/core/app_config.py` to move `prompt_template` to the shared `LLMConfig`.
+
+```python
+class LLMConfig(BaseModel):
+    provider: str
+    model: str
+    system_prompt: str
+    # Unified prompt template for both Chat and RAG
+    prompt_template: Optional[str] = None
+```
+
+### 3. Update Chat App
+Refactor `ChatGraphApp` in `llm_backend/core/applications/chat/graph_app.py`:
+
+```python
+    # In __init__
+    self.prompt_builder = PromptBuilder(
+        system_prompt=cfg.llm.system_prompt,
+        prompt_template=cfg.llm.prompt_template
+    )
+
+    # In chat_node
+    messages = prompt_builder.build_messages(state["query"])
+    response = llm.chat(messages)
+```
+
+### 4. Update RAG App
+Refactor `RAGGraphApp` in `llm_backend/core/applications/rag/graph_app.py` and `graph_nodes.py`:
+
+```python
+    # In __init__ (graph_app.py)
+    # Fallback to qa_template for backward compatibility
+    template = cfg.llm.prompt_template or cfg.rag.qa_template
+    self.prompt_builder = PromptBuilder(cfg.llm.system_prompt, template)
+    
+    # In node_synthesize (graph_nodes.py)
+    context_str = "\n\n".join(state["retrieved_nodes"])
+    # Pass context as kwargs
+    messages = prompt_builder.build_messages(state["query"], context_str=context_str) 
+    response = llm.chat(messages)
+```
+
+### 5. Configuration (`apps.yaml`)
+You can now use `prompt_template` under `llm` for any app type.
+
+**Chat Example:**
+```yaml
+  - app_name: code_review
+    app_type: chat
+    llm:
+      system_prompt: "You are a code reviewer."
+      prompt_template: "Review this code:\n\n{query}"
+```
+
+**RAG Example:**
+```yaml
+  - app_name: hr_helper
+    app_type: rag
+    llm:
+      system_prompt: "You are an HR assistant."
+      prompt_template: |
+        Context Information:
+        {context_str}
+
+        Answer the question based on the context: {query}
+```
