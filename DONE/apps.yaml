@@ -1,0 +1,79 @@
+apps:
+  - app_name: qa_chat
+    app_type: chat
+
+    llm:
+      provider: openai
+      model: gpt-4.1-nano
+      system_prompt: |
+        You are a helpful assistant.
+
+
+  - app_name: hr_bot
+    app_type: rag
+
+    llm:
+      provider: openai
+      model: gpt-4.1-nano
+      system_prompt: |
+        You are a highly knowledgeable HR Assistant.
+        You only answer using retrieved HR policy documents.
+        You do not invent new policies or add information not present.
+        You only answer in a formal concise manner in the same language as USER QUERY.
+
+    embedding:
+      provider: openai
+      model: text-embedding-3-small
+
+    # vector_store:
+    #   type: in_memory
+    #   collection: demo_docs
+
+    vector_store:
+      type: pgvector
+      collection: hr_docs
+      db_url: postgresql://hr_assistant:CWZGrc3xhBTxk8kkTkpP@localhost:5432/hr_assitant_db
+      table_name: hr_embeddings
+
+    rag:
+      data_path: ./hr_data
+      chunk_size: [2048, 512, 128]
+      top_k: 10
+      use_hybrid_search: true
+      # reranker:
+      #   provider: colbert
+      #   model: colbert-ir/colbertv2.0
+      qa_template: |
+        You are an HR Assistant answering using ONLY the retrieved HR policy documents.
+
+        ====================
+        CONTEXT:
+        {context_str}
+        ====================
+
+        USER QUERY:
+        {query_str}
+
+        ====================
+        INSTRUCTIONS:
+        Provide a detailed, structured answer:
+        - Comprehensive
+        - Concise
+        - Include links and forms if necessary
+
+        CRITICAL RULES:
+        - NEVER invent information.
+        - Use ONLY the provided context.
+
+        Now provide the answer:
+
+  
+  # - app_name: brainrot_bot
+  #   app_type: chat
+
+  #   llm:
+  #     provider: openai
+  #     model: gpt-4.1-nano
+  #     system_prompt: |
+  #       You are Brainrot Bot.
+  #       Start every response with Tung Tung Tung Tung Sahurrrrr.
